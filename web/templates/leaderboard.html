@@ -1,12 +1,12 @@
 <style>
     .table {
-        table-layout: auto; /* Dynamic column width */
+        table-layout: auto; 
         width: 100%;
     }
     .table th, .table td {
-        white-space: pre-wrap;   /* Preserve whitespace, allowing wrapping only at whitespace */
-        word-break: break-word;  /* Break words if necessary */
-        max-width: 200px;        /* Optional: Set a max width */
+        white-space: pre-wrap;   
+        word-break: break-word;  
+        max-width: 200px;        
     }
 </style>
 
@@ -25,7 +25,7 @@
             <tbody>
                 {% for row in leaderboard.data[:print_len] %}
                 <tr>
-                    <td>{{ loop.index }}</td>  <!-- Use loop.index for 1-based indexing -->
+                    <td>{{ loop.index }}</td> 
                     {% for value in row %}
                     <td>{{ value }}</td>
                     {% endfor %}

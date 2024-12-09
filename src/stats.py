@@ -178,18 +178,19 @@ def print_stats(stats, title):
 
 
 def render_to_file(template_name, output_file, **context):
-    for l in context["leaderboards"]:
-        for i, row in enumerate(l.data):
-            for j, item in enumerate(row):
-                if isinstance(item, int):
-                    l.data[i][j] = f"{item:,.0f}"
-                elif isinstance(item, float):
-                    l.data[i][j] = f"{item:,.2f}"
-                elif isinstance(item, str):
-                    if item.isdigit():
-                        l.data[i][j] = f"{int(item):,.0f}"
-                    elif item.count(".") == 1 and item.replace(".", "").isdigit():
-                        l.data[i][j] = f"{float(item):,.2f}"
+    if "leaderboards" in context:
+        for l in context["leaderboards"]:
+            for i, row in enumerate(l.data):
+                for j, item in enumerate(row):
+                    if isinstance(item, int):
+                        l.data[i][j] = f"{item:,.0f}"
+                    elif isinstance(item, float):
+                        l.data[i][j] = f"{item:,.2f}"
+                    elif isinstance(item, str):
+                        if item.isdigit():
+                            l.data[i][j] = f"{int(item):,.0f}"
+                        elif item.count(".") == 1 and item.replace(".", "").isdigit():
+                            l.data[i][j] = f"{float(item):,.2f}"
     env = Environment(loader=FileSystemLoader("web/templates"))
     template = env.get_template(template_name)
     output = template.render(**context)

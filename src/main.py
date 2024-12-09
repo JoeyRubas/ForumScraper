@@ -69,6 +69,8 @@ def main():
             print_len=25,
         )
 
+        render_to_file("index.html", "index.html", title="Forum Leaderboards Home")
+
 
 if __name__ == "__main__":
     profiler = cProfile.Profile()
