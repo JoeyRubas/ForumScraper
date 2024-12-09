@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="card mb-5">
+    <div class="card-header">Summary Statistics</div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for metric, count in summary.items() %}
+                <tr>
+                    <td>{{ metric }}</td>
+                    <td>{{ count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Table of Contents -->
+<div class="card mb-5">
+    <div class="card-header">Table of Contents</div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Jump To</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for leaderboard in leaderboards %}
+                <tr>
+                    <td>{{ leaderboard.title }}</td>
+                    <td><a href="#{{ leaderboard.id }}">{{ leaderboard.title }}</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Leaderboards -->
+{% for leaderboard in leaderboards %}
+<div id="{{ leaderboard.id }}" class="card mb-5">
+    {% include "leaderboard.html" with context %}
+</div>
+{% endfor %}
+{% endblock %}
