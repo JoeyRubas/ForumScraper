@@ -177,7 +177,7 @@ def print_stats(stats, title):
         print()
 
 
-def render_to_file(template_name, output_file, **context):
+def render_to_file(template_name, output_file, root="web/pages/", **context):
     if "leaderboards" in context:
         for l in context["leaderboards"]:
             for i, row in enumerate(l.data):
@@ -194,5 +194,5 @@ def render_to_file(template_name, output_file, **context):
     env = Environment(loader=FileSystemLoader("web/templates"))
     template = env.get_template(template_name)
     output = template.render(**context)
-    with open(f"web/pages/{output_file}", "w", encoding="utf8") as f:
+    with open(f"{root}{output_file}", "w", encoding="utf8") as f:
         f.write(output)

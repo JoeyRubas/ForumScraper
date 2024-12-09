@@ -69,7 +69,7 @@ def main():
             print_len=25,
         )
 
-        render_to_file("index.html", "index.html", title="Forum Leaderboards Home")
+        render_to_file("index.html", "index.html", root="", title="Forum Leaderboards Home")
 
 
 if __name__ == "__main__":
