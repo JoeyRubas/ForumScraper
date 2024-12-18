@@ -106,8 +106,9 @@ class Author(ForumObject):
 
 
 class leaderboard(ForumObject):
-    def __init__(self, title, headers, data):
+    def __init__(self, title, headers, data, PRINT_LEN):
         self.title = title
         self.headers = headers
         self.data = data
         self.id = hashlib.sha1(title.encode()).hexdigest()
+        self.PRINT_LEN = PRINT_LEN

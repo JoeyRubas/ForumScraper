@@ -23,7 +23,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for row in leaderboard.data[:print_len] %}
+                {% for row in leaderboard.data[:leaderboard.PRINT_LEN] %}
                 <tr>
                     <td>{{ loop.index }}</td> 
                     {% for value in row %}

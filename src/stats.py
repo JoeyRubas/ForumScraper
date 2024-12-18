@@ -5,11 +5,9 @@ from models import Author, Topic, leaderboard
 from jinja2 import Environment, FileSystemLoader
 import os
 
-
-MIN_POSTS = 5
-PRINT_LEN = 25
 MIN_POSTS = 3
-PRINT_LEN = 10
+AUTHOR_PRINT_LEN = 25
+TOPIC_PRINT_LEN = 10
 
 
 def strfdelta(remainder, fmt="{D:02.0f}d {H:02.0f}h {M:02.0f}m", inputtype="timedelta"):
@@ -143,19 +141,19 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
     )
 
     leaderboards = [
-        leaderboard("Most Topics by Author", ["Author", "Count"], atopics),
-        leaderboard("Most Posts by Author", ["Author", "Count"], aposts),
-        leaderboard("Most Words by Author", ["Author", "Count"], awords),
-        leaderboard("Longest Avg Word by Author (Minimum 5 Posts)", ["Authors", "Word Length"], aword_len),
-        leaderboard("Highest Avg Word per Post by Author (Minimum 5 Posts)", ["Author", "Word Count"], apost_len),
-        leaderboard("Most Average Posts per Topic by Author", ["Author", "Avg Posts"], aposts_by_topic),
-        leaderboard("Most Words by Topic", ["Topic", "Word Count"], twords),
-        leaderboard("Most Posts by Topic", ["Topic", "Post Count"], tposts),
-        leaderboard("Most Posters by Topic", ["Topic", "Author Count"], tauthors),
-        leaderboard(f"Longest Avg Word by Topic (Minimum {MIN_POSTS} Posts)", ["Topic", "Word Length"], twordlen),
-        leaderboard(f"Highest Avg Word per Post by Topic (Minimum {MIN_POSTS} Posts)", ["Topic", "Words Per Post"], tpostlen),
-        leaderboard("Longest Time Active by Topic", ["Topic", "Time Span"], ttime),
-        leaderboard("Longest Words", ["Authors", "Topics", "Words", "Length"], lwords),
+        leaderboard("Most Topics by Author", ["Author", "Count"], atopics, AUTHOR_PRINT_LEN),
+        leaderboard("Most Posts by Author", ["Author", "Count"], aposts, AUTHOR_PRINT_LEN),
+        leaderboard("Most Words by Author", ["Author", "Count"], awords, AUTHOR_PRINT_LEN),
+        leaderboard("Longest Avg Word by Author (Minimum 5 Posts)", ["Authors", "Word Length"], aword_len, AUTHOR_PRINT_LEN),
+        leaderboard("Highest Avg Word per Post by Author (Minimum 5 Posts)", ["Author", "Word Count"], apost_len, AUTHOR_PRINT_LEN),
+        leaderboard("Most Average Posts per Topic by Author", ["Author", "Avg Posts"], aposts_by_topic, AUTHOR_PRINT_LEN),
+        leaderboard("Most Words by Topic", ["Topic", "Word Count"], twords, TOPIC_PRINT_LEN),
+        leaderboard("Most Posts by Topic", ["Topic", "Post Count"], tposts, TOPIC_PRINT_LEN),
+        leaderboard("Most Posters by Topic", ["Topic", "Author Count"], tauthors, TOPIC_PRINT_LEN),
+        leaderboard(f"Longest Avg Word by Topic (Minimum {MIN_POSTS} Posts)", ["Topic", "Word Length"], twordlen, TOPIC_PRINT_LEN),
+        leaderboard(f"Highest Avg Word per Post by Topic (Minimum {MIN_POSTS} Posts)", ["Topic", "Words Per Post"], tpostlen, TOPIC_PRINT_LEN),
+        leaderboard("Longest Time Active by Topic", ["Topic", "Time Span"], ttime, TOPIC_PRINT_LEN),
+        leaderboard("Longest Words", ["Authors", "Topics", "Words", "Length"], lwords, TOPIC_PRINT_LEN),
     ]
 
     # ====== Return the Results ======
@@ -170,9 +168,6 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
         },
         "leaderboards": leaderboards,
     }
-
-
-PRINT_LEN = 25
 
 
 def nice_format(item):
@@ -204,7 +199,7 @@ def print_stats(stats, title):
         for i, row in enumerate(l.data):
             for j, item in enumerate(row):
                 l.data[i][j] = nice_format(item)
-        table_data = [[i + 1, *row] for i, row in enumerate(l.data[:PRINT_LEN])]
+        table_data = [[i + 1, *row] for i, row in enumerate(l.data[: l.PRINT_LEN])]
         print(tabulate(table_data, headers=l.headers, tablefmt="fancy_grid"))
         print()
 
