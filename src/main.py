@@ -10,16 +10,19 @@ import os
 os.environ['PYTHONUTF8'] = '1'
 
 
-def main():
+def main(force_scrape=False, save_after_pre_compute=False):
+    force_scrape = False
+    force_pre_compute = False
+    save_after_pre_compute = False
     print("Starting scraping...")
-    categories, topics, posts, authors = scrape()
-    print("Done scraping!")
+    categories, topics, posts, authors = scrape(force_scrape=force_scrape)
 
     print("Pre-computing statistics...")
     for post in posts:
-        post.pre_compute()
+        post.pre_compute(force_pre_compute=force_pre_compute)
     # Save is called automatically in scrape, this is to save the pre-computed data (optional)
-    # save_data(categories, topics, posts, authors)
+    if save_after_pre_compute:
+        save_data(categories, topics, posts, authors)
 
     # Thread function to calculate stats
     def calculate_wrapper(*args, **kwargs):
@@ -29,7 +32,7 @@ def main():
     with ThreadPoolExecutor() as executor:
         future_include_fun_games = executor.submit(calculate_wrapper, categories)
         future_exclude_fun_games = executor.submit(calculate_wrapper, categories, exclude_categories=["Fun & Games"])
-        future_just_general = executor.submit(calculate_wrapper, categories, include_categories=["General Discussion"])
+        future_just_general = executor.submit(calculate_wrapper, categories, include_categories=["General"])
 
         include_fun_games_stats = future_include_fun_games.result()
         exclude_fun_games_stats = future_exclude_fun_games.result()
@@ -40,7 +43,7 @@ def main():
         with redirect_stdout(f):
             print_stats(include_fun_games_stats, "Forum Leaderboard Including 'Fun & Games'")
             print_stats(exclude_fun_games_stats, "Forum Leaderboard Excluding 'Fun & Games'")
-            print_stats(just_general, "Forum Leaderboard for Just 'General Discussion' Category")
+            print_stats(just_general, "Forum Leaderboard for Just 'General' Category")
 
         render_to_file(
             "stats.html",
@@ -55,8 +58,8 @@ def main():
             "stats.html",
             "exclude_games.html",
             title="Leaderboards for All Categories (Excluding 'Fun & Games')",
-            summary=include_fun_games_stats["summary"],
-            leaderboards=include_fun_games_stats["leaderboards"],
+            summary=exclude_fun_games_stats["summary"],
+            leaderboards=exclude_fun_games_stats["leaderboards"],
             print_len=25,
         )
 
@@ -64,8 +67,8 @@ def main():
             "stats.html",
             "just_general.html",
             title="Leaderboards for General",
-            summary=include_fun_games_stats["summary"],
-            leaderboards=include_fun_games_stats["leaderboards"],
+            summary=just_general["summary"],
+            leaderboards=just_general["leaderboards"],
             print_len=25,
         )
 
@@ -73,8 +76,4 @@ def main():
 
 
 if __name__ == "__main__":
-    profiler = cProfile.Profile()
-    profiler.enable()
     main()
-    profiler.disable()
-    profiler.dump_stats('output.prof')

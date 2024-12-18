@@ -1,14 +1,14 @@
 from collections import Counter, defaultdict
 from string import Formatter
 from tabulate import tabulate
-from models import leaderboard
+from models import Author, Topic, leaderboard
 from jinja2 import Environment, FileSystemLoader
 import os
 
 
 MIN_POSTS = 5
 PRINT_LEN = 25
-MIN_POSTS = 10
+MIN_POSTS = 3
 PRINT_LEN = 10
 
 
@@ -25,23 +25,13 @@ def strfdelta(remainder, fmt="{D:02.0f}d {H:02.0f}h {M:02.0f}m", inputtype="time
 
 
 def calculate_stats(categories, include_categories=[], exclude_categories=[]):
-    print("\nCalculating statistics for leaderboard with conditions:")
-    if include_categories:
-        print(f"Only include: { ', '.join(include_categories) }")
-    if exclude_categories:
-        print(f"Exclude: {', '.join(exclude_categories)}")
-    if not include_categories and not exclude_categories:
-        print("No category filters applied.")
-
     # ====== Helper Functions ======
     def data(type, func, cond=lambda x: True):
         if type == "a":
             l = authors
-            name = lambda a: a.name
         elif type == "t":
             l = ftopics
-            name = lambda t: t.title
-        return sorted([[name(i), func(i)] for i in l if cond(i)], key=lambda x: -x[1])
+        return sorted([[i, func(i)] for i in l if cond(i)], key=lambda x: -x[1])
 
     def topic_time_span(topic):
         posts = [p for p in topic.posts]
@@ -50,13 +40,16 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
         return time
 
     # ====== Filtering Data ======
+    print("\nCalculating statistics for leaderboard with conditions:")
     if include_categories:
+        print(f"Only include: { ', '.join(include_categories) }")
         categories = filter(lambda c: c.title in include_categories, categories)
     elif exclude_categories:
+        print(f"Exclude: {', '.join(exclude_categories)}")
         categories = filter(lambda c: c.title not in exclude_categories, categories)
     else:
-        categories = set(categories)
-
+        print("No category filters applied.")
+    categories = set(categories)
     topics = set(t for c in categories for t in c.topics)
     posts = set(p for t in topics for p in t.posts)
     authors = {p.author for p in posts}
@@ -89,6 +82,18 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
             authors.remove(a)
 
     print("Filtering complete.")
+    # New logging, print len of each set
+    print(f"Categories: {len(categories)}")
+    print(f"Topics: {len(topics)}")
+    print(f"Posts: {len(posts)}")
+    print(f"Authors: {len(authors)}")
+    # print len of topic and author special dicts
+    print(f"Filtered Topics: {len(ftopics)}")
+    print(f"Author Posts: {len(author_posts)}")
+    print(f"Author Word Counts: {len(author_word_counts)}")
+    print(f"Author Word Lengths: {len(author_word_lens)}")
+    print(f"Author Post Lengths: {len(author_post_lens)}")
+    print("Logging complete.")
 
     # ====== Summary Calculations ======
     total_topics = len(topics)
@@ -115,7 +120,7 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
     twordlen = data("t", lambda t: topic_word_lengths[t])
     tpostlen = data("t", lambda t: topic_post_lengths[t])
     ttime = data("t", topic_time_span)
-    ttime = [(t[0], strfdelta(t[1])) for t in ttime]
+    ttime = [[t[0], strfdelta(t[1])] for t in ttime]
     print("Topic Calculations complete.\n")
 
     # ====== Data for Words ======
@@ -125,7 +130,15 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
             if len(w) > 10:
                 w_by_p[w].add(p)
     lwords = sorted(
-        [[", ".join(p.author.name for p in p_list), ", ".join(p.topic.title for p in p_list), w, len(w)] for w, p_list in w_by_p.items()],
+        [
+            [
+                ", ".join(f'<a href="{p.author.url}"> {p.author.name} </a>' for p in p_list),
+                ", ".join(f'<a href="{p.topic.url}"> {p.topic.title} </a>' for p in p_list),
+                w,
+                len(w),
+            ]
+            for w, p_list in w_by_p.items()
+        ],
         key=lambda x: -x[3],
     )
 
@@ -162,6 +175,23 @@ def calculate_stats(categories, include_categories=[], exclude_categories=[]):
 PRINT_LEN = 25
 
 
+def nice_format(item):
+    if isinstance(item, int):
+        return f"{item:,.0f}"
+    elif isinstance(item, float):
+        return f"{item:,.2f}"
+    elif isinstance(item, str):
+        if item.isdigit():
+            return f"{int(item):,.0f}"
+        elif item.count(".") == 1 and item.replace(".", "").isdigit():
+            return f"{float(item):,.2f}"
+    elif isinstance(item, Author):
+        return f"<a href='{item.url}'>{item.name}</a>"
+    elif isinstance(item, Topic):
+        return f"<a href='{item.url}'>{item.title}</a>"
+    return item
+
+
 def print_stats(stats, title):
     print(f"\n{'='*40}")
     print(f" {title} ")
@@ -171,9 +201,11 @@ def print_stats(stats, title):
     print("\nLeaderboard Details:\n")
     for l in stats["leaderboards"]:
         print(l.title)
-        fmt = ".0f" if l.data[0][0].isdigit() else ".2f"
+        for i, row in enumerate(l.data):
+            for j, item in enumerate(row):
+                l.data[i][j] = nice_format(item)
         table_data = [[i + 1, *row] for i, row in enumerate(l.data[:PRINT_LEN])]
-        print(tabulate(table_data, headers=l.headers, tablefmt="fancy_grid", floatfmt=fmt))
+        print(tabulate(table_data, headers=l.headers, tablefmt="fancy_grid"))
         print()
 
 
@@ -182,15 +214,8 @@ def render_to_file(template_name, output_file, root="web/pages/", **context):
         for l in context["leaderboards"]:
             for i, row in enumerate(l.data):
                 for j, item in enumerate(row):
-                    if isinstance(item, int):
-                        l.data[i][j] = f"{item:,.0f}"
-                    elif isinstance(item, float):
-                        l.data[i][j] = f"{item:,.2f}"
-                    elif isinstance(item, str):
-                        if item.isdigit():
-                            l.data[i][j] = f"{int(item):,.0f}"
-                        elif item.count(".") == 1 and item.replace(".", "").isdigit():
-                            l.data[i][j] = f"{float(item):,.2f}"
+                    l.data[i][j] = nice_format(item)
+
     env = Environment(loader=FileSystemLoader("web/templates"))
     template = env.get_template(template_name)
     output = template.render(**context)
